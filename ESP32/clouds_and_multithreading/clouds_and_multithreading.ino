@@ -42,10 +42,11 @@ void setup() {
 
       Serial.println(xPortGetCoreID());
 
-  for (int i = 0; i < 360; i += 1) {
-    curtainMotor1.write(i);
-    delay(10);
-  }
+  // for (int i = 0; i < 360; i += 1) {
+  //   curtainMotor1.write(i);
+  //   delay(10);
+  // }
+  curtainMotor1.write(0);
 }
 
 void loop() {
