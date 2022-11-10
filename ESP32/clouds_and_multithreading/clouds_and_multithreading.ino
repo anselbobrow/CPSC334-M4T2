@@ -9,61 +9,79 @@ const int stepsPerRevolution = 2048;
 #define IN2 18
 #define IN3 5
 #define IN4 17
-#define SERVO_PIN 26 
+#define CLOUD_PIN 26 
+#define CURTAIN_PIN_1 22
 
 Stepper myStepper(stepsPerRevolution, IN1, IN3, IN2, IN4);
-Servo servoMotor;
+Servo cloudMotor;
+Servo curtainMotor1;
 int distance = 50;
 int speed = 5;
-int pos = 0;
+int cloudPos = 0;
+int curtainPos1 = 0;
 int mapSpeed;
 
 TaskHandle_t clouds;
 
 void setup() {
   myStepper.setSpeed(5);
-  servoMotor.attach(SERVO_PIN);
+  cloudMotor.attach(CLOUD_PIN);
+  curtainMotor1.attach(CURTAIN_PIN_1);
   Serial.begin(115200);
 
   // multithreading for task 1 (rotating servo)
+  // https://randomnerdtutorials.com/esp32-dual-core-arduino-ide/ 
   xTaskCreatePinnedToCore(
-      clouds, /* Function to implement the task */
+      cloudsFunction, /* Function to implement the task */
       "clouds", /* Name of the task */
       10000,  /* Stack size in words */
       NULL,  /* Task input parameter */
       0,  /* Priority of the task */
       &clouds,  /* Task handle. */
       0); /* Core where the task should run */
+
+      Serial.println(xPortGetCoreID());
+
+  for (int i = 0; i < 360; i += 1) {
+    curtainMotor1.write(i);
+    delay(10);
+  }
 }
 
 void loop() {
   // step one revolution in one direction:
-  myStepper.step(stepsPerRevolution);
+  // myStepper.step(stepsPerRevolution);
+  // Serial.println(xPortGetCoreID());
+
+  // curtain 1
+
+  // moveTo(0, speed);
+  // moveTo(50, speed);
 }
 
 // rotates servo to position at specified speed
-int pos1 = 0;
-void moveTo(int position, int speed) {
+int pos1;
+void cloudMove(int position, int speed) {
   mapSpeed = map(speed, 0, 30, 30, 0);
-  if (position > pos) {
-    for (pos = pos1; pos <= position; pos += 1) {
-      servoMotor.write(pos);
-      pos1 = pos;
+  if (position > cloudPos) {
+    for (cloudPos = pos1; cloudPos <= position; cloudPos += 1) {
+      cloudMotor.write(cloudPos);
+      pos1 = cloudPos;
       delay(mapSpeed);
     }    
   } else {
-    for (pos = pos1; pos >= position; pos -= 1) {
-      servoMotor.write(pos);
-      pos1 = pos;
+    for (cloudPos = pos1; cloudPos >= position; cloudPos -= 1) {
+      cloudMotor.write(cloudPos);
+      pos1 = cloudPos;
       delay(mapSpeed);
     }
   }
 }
 
 // clouds
-void clouds( void * parameter) {
+void cloudsFunction( void * parameter) {
   for(;;) {
-    moveTo(0, speed);
-    moveTo(50, speed);
+    cloudMove(0, 5);
+    cloudMove(50, 5);
   }
 }
