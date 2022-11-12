@@ -10,23 +10,24 @@ const int stepsPerRev = 2048;
 #define IN4 17
 #define SERVO_PIN 26
 #define BUTTON 27
-#define SUN 33
 
+//variable for noting differnt times of day in the sequence
 int off = 2;
 
+//motors
 Stepper myStepper(stepsPerRev, IN1, IN3, IN2, IN4);
 Servo myservo;
 int angle = 0;
 
-
+//tasks for multithreading
 TaskHandle_t belt;
 TaskHandle_t day;
 
+
 void setup() {
   pinMode(BUTTON, INPUT);
-  pinMode(SUN, OUTPUT);
   // set speed of stepper
-  myStepper.setSpeed(17);
+  myStepper.setSpeed(15);
   //pin the servo is at
   myservo.attach(SERVO_PIN, 400, 2400);
   //set servo angle to 0
@@ -58,17 +59,20 @@ void setup() {
 
 void loop(){}
 
+//sun servo code
 void sun(void * parameter) {
   while(true){
-    //Serial.println(off);
+    //
+    int night = 0;
     int button = digitalRead(BUTTON);
-    //Serial.println(button);
+    //if the day/night cycle is initiated
     if(off == 2 && button == HIGH){
       off = 0;
+      delay(4000);
+      night = 1;
     }
-    //increment servo angle
+    //increment servo angle if daytime
     if (off == 0){
-      digitalWrite(SUN, LOW);
       angle++;
       delay(100);
       //move servo
@@ -77,12 +81,18 @@ void sun(void * parameter) {
         off = 1;
       }
     }
+    //nighttime
     else if (off == 1){
-      digitalWrite(SUN, HIGH);
+      if(night == 1){
+        delay(5000);
+        night = 0;
+      }
+      //reset sun - do day portion backwards
       angle--;
       delay(100);
       //move servo
       myservo.write(angle);
+      //cycle is over
       if(angle == 0){
         off = 2;
       }
@@ -90,22 +100,35 @@ void sun(void * parameter) {
   }
 }
 
-void conveyor(void * parameter)
-{
-  int nothing;
+//moving the character
+void conveyor(void * parameter){
+  int night = 0;
+  int nothing = 0;
   while(true){
+    //initial nighttim and then daytime movement
     if(off == 0){
+      if(night == 0){
+        delay(4000);
+        night = 1;
+      }
       myStepper.step(stepsPerRev);
     }
-    else if(off == 1 || off == 2)
-    {
+    else if(off == 1 || off == 2){
+      //nightime
       if(off == 1){
+        if(night == 1){
+          delay(4000);
+          night = 0;
+          myStepper.setSpeed(17);
+        }
+        //send character back to start
         myStepper.step(-stepsPerRev);
       }
-      while(off == 2)
-      {
+      //day/night cycle is over
+      while(off == 2){
         nothing++;
       }
+      myStepper.setSpeed(15);
     }
   }
 }
