@@ -1,7 +1,7 @@
 # Night/Day Diorama
 ## Sachi, Ansel, Siena
 
-## Intro && Usage
+## Intro & Usage
 
 To start this diorama, ensure all power is plugged in. This should be batteries, two ESPs, and the wall power. Once powered, press the button (in aluminum foil at the bottom left of the diorama), which will start the kinetic sculpture.
 
